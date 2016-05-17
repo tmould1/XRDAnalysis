@@ -1,8 +1,10 @@
+import xrdClasses
+
 #get theoretical data
 def getTheoreticalData():
     status = 1
     # get theoretical filename
-    thFileName = str(raw_input("Which theoretical file to use?"))
+    thFileName = str(raw_input("Enter Theoretical Filename:"))
     if not thFileName:
         status = 0
     # error check filename
@@ -16,12 +18,19 @@ def getTheoreticalData():
 
 #get experimental data
 def getExperimentalData():
-    # get experimental filename 
+    status = 1
+    # get experimental filename
+    xpFileName = str(raw_input("Enter Experimental Filename:"))
+    if not xpFileName:
+        status = 0
     # error check filename
     # open file
     # error check file open
     # put Intensity & 2theta-vals into an object
-    print 'Got experimental data'
+    if status:
+        print 'Got experimental data'
+    else:
+        print 'Did not get experimental data'
 
 # calculate d-ratios
 def calcRatios():
@@ -41,6 +50,7 @@ def report():
     
 # main
 def main():
+    #theorySet = TheoreticalDataPoint[sizeOfDataSet]
     getTheoreticalData()
     getExperimentalData()
     calcRatios()

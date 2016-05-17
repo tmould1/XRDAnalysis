@@ -19,7 +19,7 @@ class MillerIndices:
         print self.get()
 
 
-class TheoryDataPoint:
+class TheoreticalDataPoint:
     intensity = 0
     indices = MillerIndices(0,0,0)
     dVal = 0
@@ -38,7 +38,7 @@ class TheoryDataPoint:
         return data
 
     def getIdentifier(self):
-        self.indices.Report()
+        return self.indices.get()
 
     def Report(self):
         print self.get()
@@ -64,6 +64,6 @@ class ExperimentalDataPoint:
         return 1
 
     def getIdentifier(self):
-        self.indices.Report()
+        return self.indices.get()
         
 

@@ -4,6 +4,9 @@
 # For Research Purposes
 #  To Compare theoretical data with experimental data
 #    in order to identify peak matching for candidate subtances
+#
+# input:  theoretical and experimental xrd data files, structure
+# output: theoretical and experimental lattice constants, volume, and plots
 
 import xrdClasses
 
@@ -29,17 +32,62 @@ def PlaceDataPoint( point, position, dataSet):
 #  Main Helper Functions
 #############
 
+### file check
+##def fileCheck( FileName ):
+##    try:
+##        File = open( FileName )
+##    except IOError:
+##        print 'Cannot open "', FileName, '"'
+##        File = str(raw_input('Please enter the correct File Name: '))
+##    else:
+##        print FileName, ' opened successfully'
+
+def fileCheck( fileName ) :
+    status = 1
+    try:
+        f = open(fileName)
+    except IOError:
+        status = 0
+    finally:
+        f.close()
+
+    return status
+        
+
+
 #get theoretical data
 def getTheoreticalData():
-    status = 1
-    # get theoretical filename
-    thFileName = str(raw_input("Enter Theoretical Filename:"))
-    if not thFileName:
-        status = 0
-    # error check filename
-    # open file
-    # error check file open
+    status = 0
+    while status == 0:
+        # get theoretical filename
+        thFileName = str(raw_input("Enter Theoretical File Name:"))
+    
+        # open file
+        status = fileCheck( thFileName )
+
+        # no good?
+        if status == 0:
+            thFileName = str(raw_input('Please enter the correct File Name: '))
+        
+     
     # put Intensity, h,k,l & d-vals into an object
+    # open file for reading
+    f = open( thFileName )
+    # initialize lists
+    th_I = []
+    th_d = []
+    th_h = []
+    th_k = []
+    th_l = []
+    for line in f:
+        line = line.strip()
+        columns = line.split()
+        AddDataPoint( columns[0], th_I )
+        AddDataPoint( columns[1], th_d )
+        AddDataPoint( columns[2], th_h )
+        AddDataPoint( columns[3], th_k )
+        AddDataPoint( columns[4], th_l )
+    f.close()
     # Use AddDataPoint( data, theoreticalSet);  - Todd
 
     if status:
@@ -49,15 +97,27 @@ def getTheoreticalData():
 
 #get experimental data
 def getExperimentalData():
-    status = 1
-    # get experimental filename
-    xpFileName = str(raw_input("Enter Experimental Filename:"))
-    if not xpFileName:
-        status = 0
-    # error check filename
-    # open file
-    # error check file open
+    status = 0
+    while status == 0:
+        # get experimental filename
+        xpFileName = str(raw_input("Enter Experimental File Name:"))
+    
+        # open file
+        status = fileCheck( xpFileName )
+
+        # no good?
+        if status == 0:
+            xpFileName = str(raw_input('Please enter the correct File Name: '))
+        
+    
     # put Intensity & 2theta-vals into an object
+    # open file for reading
+    f = open( xpFileName )
+    # initialize lists
+    xp_2theta = []
+    xp_I = []
+    
+    f.close()
     # Use AddDataPoint( data, experimentalSet );  - Todd
     if status:
         print 'Got experimental data'

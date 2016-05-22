@@ -61,6 +61,7 @@ def getTheoreticalData():
     status = 0
 
     # get theoretical filename
+    equationType = int(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal"))
     thFileName = str(raw_input("Enter Theoretical File Name:"))
     while status == 0:
     
@@ -168,15 +169,20 @@ def getExperimentalData():
 # Process Data
 def processData():
     # determine equation type
-    # Assuming Cubic for Show
-
-    # Create an Object from Class Instantiation
-    cSolver = xrdClasses.CubicEquation()
-    
+    if equationType == 0:
+        # Create an Object from Class Instantiation
+        solver = xrdClasses.CubicEquation()
+    elif equationType == 1:
+        solver = xrdClasses.TetragonalEquation()
+    elif equationType == 2:
+        solver = xrdClasses.OrthorhombicEquation()
+    elif equationType == 3:
+        solver = xrdClasses.HexagonalEquation()
     for point in theoreticalSet:
         thetaRad = math.radians(point.twoTheta)
-        print cSolver.solve(point)
-        AddDataPoint( thetaRad, processedTheoreticalSet )\
+        if equationType == 0
+        print solver.solve(point)
+        AddDataPoint( thetaRad, processedTheoreticalSet )
                       
     
 
@@ -246,6 +252,7 @@ theoreticalSet = []
 experimentalSet = []
 processedTheoreticalSet = []
 processedExperimentalSet = []
+equationType = -1
 main()
 
 

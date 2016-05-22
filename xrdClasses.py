@@ -114,7 +114,7 @@ class TetragonalEquation:
         self.a = math.sqrt((pow(h1,2)+pow(k1,2))/((pow(l1,2)/pow(self.c,2))-inD1))
         return [self.a, self.c]
 
-class OrthogonalEquation:
+class OrthorhombicEquation:
     a = 0
     b = 0
     c = 0
@@ -132,8 +132,15 @@ class OrthogonalEquation:
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
         inD3 = point3.invDSqr
-        self.c = math.sqrt((inD3 - inD1*pow(h3,2)/pow(h1,2) - ((pow(k3,2)-pow(k1,2)*pow(h3,2)/pow(h1,2))*(inD2-inD1*pow(h2,2)/pow(h1,2))/(pow(k2,2)-pow(k1,2)*pow(h2,2)/pow(h1,2))))/(pow(l3,2)-pow(l1,2)*pow(h3,2)/pow(h1,2)-(pow(l2,2)-pow(l1,2)*pow(h2,2)/pow(h1,2))*((pow(k3,2)-pow(k1,2)*pow(h3,2)/pow(h1,2))/(pow(k2,2)-pow(k1,2)*pow(h3,2)/pow(h1,2)))))
-        self.b = 
-        return [self.a, self.c]
+        h21Sqr = pow(h2/h1,2)
+        h31Sqr = pow(h3/h1,2)
+        cNum = pow(l3,2)-pow(l1,2)*h31Sqr-(pow(l2,2)-pow(l1,2)*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
+        cDen = inD3-inD1*h31Sqr-(inD2-inD1*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
+        self.c = math.sqrt(cNum/cDen)
+        bNum = pow(k2,2)-pow(k1,2)*h21Sqr
+        bDen = inD2-inD1*h21Sqr-(pow(l2,2)-pow(l1,2)*h21Sqr)/pow(self.c,2)
+        self.b = math.sqrt(bNum/bDen)
+        self.a = h1/math.sqrt(inD1-pow(k1,2)/pow(self.b,2)-pow(l1,2)/pow(self.c,2))
+        return [self.a, self.b, self.c]
 
 

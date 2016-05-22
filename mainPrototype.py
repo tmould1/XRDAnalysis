@@ -61,8 +61,8 @@ def getTheoreticalData():
     status = 0
 
     # get theoretical filename
-    equationType = int(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal"))
-    thFileName = str(raw_input("Enter Theoretical File Name:"))
+    equationType = int(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal :  "))
+    thFileName = str(raw_input("Enter Theoretical File Name:  "))
     while status == 0:
     
         # open file
@@ -70,7 +70,7 @@ def getTheoreticalData():
 
         # no good?
         if status == 0:
-            thFileName = str(raw_input('Please enter the correct File Name: '))
+            thFileName = str(raw_input('Please enter the correct File Name:  '))
             
     # Initialize data point counter
     i = 0
@@ -114,6 +114,8 @@ def getTheoreticalData():
     # END FOR
     
     f.close()
+
+    print theoreticalSet[0]
 
     if status:
         print 'Got theoretical data'
@@ -180,8 +182,10 @@ def processData():
         solver = xrdClasses.HexagonalEquation()
     for point in theoreticalSet:
         thetaRad = math.radians(point.twoTheta)
-        if equationType == 0
-        print solver.solve(point)
+        if equationType == 0:
+            print solver.solve(point)
+            break
+       
         AddDataPoint( thetaRad, processedTheoreticalSet )
                       
     

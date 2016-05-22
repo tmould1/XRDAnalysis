@@ -9,6 +9,8 @@
 # output: theoretical and experimental lattice constants, volume, and plots
 
 import xrdClasses
+import math
+import csv
 
 #############
 #  List Helper Functions
@@ -49,18 +51,18 @@ def fileCheck( fileName ) :
     except IOError:
         status = 0
     finally:
-        f.close()
+        if status == 1:
+            f.close()
 
     return status
-        
-
 
 #get theoretical data
 def getTheoreticalData():
     status = 0
+
+    # get theoretical filename
+    thFileName = str(raw_input("Enter Theoretical File Name:"))
     while status == 0:
-        # get theoretical filename
-        thFileName = str(raw_input("Enter Theoretical File Name:"))
     
         # open file
         status = fileCheck( thFileName )
@@ -68,27 +70,49 @@ def getTheoreticalData():
         # no good?
         if status == 0:
             thFileName = str(raw_input('Please enter the correct File Name: '))
-        
-     
-    # put Intensity, h,k,l & d-vals into an object
+            
+    # Initialize data point counter
+    i = 0
+    
     # open file for reading
     f = open( thFileName )
-    # initialize lists
-    th_I = []
-    th_d = []
-    th_h = []
-    th_k = []
-    th_l = []
+    j = 0
     for line in f:
+        if j < 9:
+            j+=1
+            continue
+
+        # Strip the line into words
+            
         line = line.strip()
-        columns = line.split()
-        AddDataPoint( columns[0], th_I )
-        AddDataPoint( columns[1], th_d )
-        AddDataPoint( columns[2], th_h )
-        AddDataPoint( columns[3], th_k )
-        AddDataPoint( columns[4], th_l )
+        line = line.split()
+
+        # End of File Condition
+        if '*' in line[0]:
+            break
+
+        # Acquire Data
+        h = int(line[0])
+        k = int(line[1])
+        l = int(line[2])
+        d = float(line[3])
+        twoTheta = float(line[4])
+        intensityString = line[5]
+        intensityTriple = intensityString.partition('e')
+        intensity = pow(float(intensityTriple[0]),float(intensityTriple[2]))
+        percentImax = float(line[6].rstrip('%'))
+   
+        # Make Data Point object and load info
+        iDataPoint = xrdClasses.TheoreticalDataPoint( intensity, percentImax, d, twoTheta, i )
+        iDataPoint.setIdentifier(h,k,l)
+            
+        # Add Data point to list
+        AddDataPoint( iDataPoint, theoreticalSet )
+        i+=1
+        
+    # END FOR
+    
     f.close()
-    # Use AddDataPoint( data, theoreticalSet);  - Todd
 
     if status:
         print 'Got theoretical data'
@@ -98,31 +122,63 @@ def getTheoreticalData():
 #get experimental data
 def getExperimentalData():
     status = 0
-    while status == 0:
-        # get experimental filename
-        xpFileName = str(raw_input("Enter Experimental File Name:"))
+
+    # get experimental filename
+    xpFileName = str(raw_input("Enter Experimental File Name:"))
+
     
+    while status == 0:    
         # open file
         status = fileCheck( xpFileName )
 
         # no good?
         if status == 0:
             xpFileName = str(raw_input('Please enter the correct File Name: '))
-        
+            
+    # Initialize data point counter
+    i = 0
     
-    # put Intensity & 2theta-vals into an object
     # open file for reading
-    f = open( xpFileName )
-    # initialize lists
-    xp_2theta = []
-    xp_I = []
+    with open( xpFileName ) as csvfile:
+        f = csv.reader(csvfile, delimiter=' ')
+
+        for line in f:
+            # Strip the line into words
+            
+            twoTheta = float(line[0])
+            intensity = float(line[1])
+        
+            # Make Data Point object
+            iDataPoint = xrdClasses.ExperimentalDataPoint( intensity, twoTheta, i )
+            
+            # Add Data point to list
+            AddDataPoint( iDataPoint, experimentalSet )
+            i+=1
+        
+            # END FOR
     
-    f.close()
-    # Use AddDataPoint( data, experimentalSet );  - Todd
+    csvfile.close()   
+
     if status:
         print 'Got experimental data'
     else:
         print 'Did not get experimental data'
+
+
+# Process Data
+def processData():
+    # determine equation type
+    # Assuming Cubic for Show
+
+    # Create an Object from Class Instantiation
+    cSolver = xrdClasses.CubicEquation()
+    
+    for point in theoreticalSet:
+        thetaRad = math.radians(point.twoTheta)
+        print cSolver.solve(point)
+        AddDataPoint( thetaRad, processedTheoreticalSet )\
+                      
+    
 
 # calculate d-ratios
 def calcRatios():
@@ -138,42 +194,58 @@ def calcLattice():
 
 # Report necessary information in appropriate location
 def report():
-
+##    for datapoint in theoreticalSet:
+##        print "MillerIndices: ", datapoint.indices.Report()
+##        print "Data: ", datapoint.Report()
     print 'All data reported to specified location'
-    
-# main
-def main():  
-    getTheoreticalData()
-    getExperimentalData()
 
-    calcRatios()
-    checkInfo()
-    calcLattice()
-    
-    report()
+###############
+# Proof Of Concept Section
+###############
 
-    # Proof of Concept
+def AddPointPOC():
     print "Proof of Concept:  Adding and Retrieving from List"
 
     # Adding a Theoretical and Experimental Data Point to the set of all respective points
     testTheoreticalPoint = xrdClasses.TheoreticalDataPoint( 0.5, 1, 0 )
-    testTheoreticalPoint.indices.set( 1, 0, 0 )
-    #theoreticalSet.append( testTheoreticalPoint )
+    testTheoreticalPoint.setIdentifier( 1, 0, 0 )
+    AddDataPoint( testTheoreticalPoint, theoreticalSet )
+
+    testTheoreticalPoint = xrdClasses.TheoreticalDataPoint( 0.75, 1, 1 )
+    testTheoreticalPoint.setIdentifier( 0, 1, 0 )
     AddDataPoint( testTheoreticalPoint, theoreticalSet )
 
     # ExperimentalDataPoint Constructor to be more defined later, should increase number of input paramters
-    testExperimentalPoint = xrdClasses.ExperimentalDataPoint()
+    testExperimentalPoint = xrdClasses.ExperimentalDataPoint( 0.5,1,0 )
     testExperimentalPoint.indices.set( 0, 1, 0 )
-    #experimentalSet.append( testExperimentalPoint )
     AddDataPoint( testExperimentalPoint, experimentalSet )
 
-    print GetDataPoint(0, theoreticalSet).getIdentifier()
-    print GetDataPoint(0, experimentalSet).getIdentifier()
-    # End Proof of Concept
+###############
+# END Proof Of Concept Section
+###############
+    
+# main
+def main():  
+    getTheoreticalData()
+    #getExperimentalData()
+
+    processData()
+
+    calcRatios()
+    checkInfo()
+    calcLattice()
+
+    # Proof of Concepts
+    #AddPointPOC()
+    # End Proof of Concepts
+
+    report()
 
 # Procedure
 theoreticalSet = []
 experimentalSet = []
+processedTheoreticalSet = []
+processedExperimentalSet = []
 main()
 
 

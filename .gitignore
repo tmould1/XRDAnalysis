@@ -1,0 +1,8 @@
+FileCheck function.py
+getData function.py
+testExperiment.csv
+testExperiment.txt
+testTheory.csv
+testTheory.txt
+theoretical file open error check.py
+theoretical filename error check.py

@@ -50,6 +50,7 @@ class TheoreticalDataPoint:
         self.indices = MillerIndices(ih,ik,il)
 
     def getIdentifier(self):
+        
         return self.indices
 
     def Report(self):
@@ -143,4 +144,20 @@ class OrthorhombicEquation:
         self.a = h1/math.sqrt(inD1-pow(k1,2)/pow(self.b,2)-pow(l1,2)/pow(self.c,2))
         return [self.a, self.b, self.c]
 
+class HexagonalEquation:
+    a = 0
+    c = 0
 
+    def solve(self, point1, point2):
+        h1 = point1.indices.h
+        h2 = point2.indices.h
+        k1 = point1.indices.k
+        k2 = point2.indices.k
+        l1 = point1.indices.l
+        l2 = point2.indices.l
+        inD1 = point1.invDSqr
+        inD2 = point2.invDSqr
+        l21Sqr = pow(l2/l1,2)
+        self.a = 2*math.sqrt((pow(h2,2)+h2*k2+pow(k2,2)-l21Sqr*(pow(h1,2)+h1*k1+pow(k1,2)))/(3*(inD2-inD1*l21Sqr)))
+        self.c = l1/math.sqrt(inD1-4*(pow(h1,2)+h1*k1+pow(k1,2))/(3*pow(self.a,2)))
+        return [self.a, self.c]

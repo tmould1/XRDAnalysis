@@ -60,8 +60,13 @@ def fileCheck( fileName ) :
 def getTheoreticalData():
     status = 0
 
+    global equationType
+    equationType = -1
+    
     # get theoretical filename
-    equationType = int(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal :  "))
+    askStructureType = str(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal :  "))
+    equationType = float(askStructureType)
+    print equationType
     thFileName = str(raw_input("Enter Theoretical File Name:  "))
     while status == 0:
     
@@ -115,7 +120,7 @@ def getTheoreticalData():
     
     f.close()
 
-    print theoreticalSet[0]
+    
 
     if status:
         print 'Got theoretical data'
@@ -170,6 +175,7 @@ def getExperimentalData():
 
 # Process Data
 def processData():
+    print equationType
     # determine equation type
     if equationType == 0:
         # Create an Object from Class Instantiation
@@ -180,13 +186,48 @@ def processData():
         solver = xrdClasses.OrthorhombicEquation()
     elif equationType == 3:
         solver = xrdClasses.HexagonalEquation()
+    i = 2
+    hkl = []
     for point in theoreticalSet:
-        thetaRad = math.radians(point.twoTheta)
+        hkl = point.getIdentifier().Report()
+        print hkl
         if equationType == 0:
-            print solver.solve(point)
-            break
-       
-        AddDataPoint( thetaRad, processedTheoreticalSet )
+            a = solver.solve(point)
+            print a
+        elif equationType == 1:
+            if i%2==0:
+                point1 = point
+            else:
+                print solver.solve(point1,point)
+##        elif equationType == 2:
+##            if i%2==0:
+##                point1 = point
+##            elif i == 1:
+##                point2 = point
+##                i+=1
+##            elif i>1:
+##                print solver.solve(point1,point2,point)
+        elif equationType == 3:
+            if i%2==0:
+                point1 = point
+            else:
+                print solver.solve(point1,point)
+        i+=1
+            
+    
+        
+        
+        
+        
+    
+        
+        
+##        thetaRad = math.radians(point.twoTheta)
+##        if equationType == 0:
+##            print solver.solve(point)
+##            break
+##       
+##        AddDataPoint( thetaRad, processedTheoreticalSet )
                       
     
 
@@ -235,11 +276,15 @@ def AddPointPOC():
 ###############
     
 # main
-def main():  
+def main():
+
+    
+    
     getTheoreticalData()
     #getExperimentalData()
 
     processData()
+    print "processed data"
 
     calcRatios()
     checkInfo()
@@ -256,7 +301,10 @@ theoreticalSet = []
 experimentalSet = []
 processedTheoreticalSet = []
 processedExperimentalSet = []
-equationType = -1
+##equationType = -1
+a = []
+b = []
+c = []
 main()
 
 

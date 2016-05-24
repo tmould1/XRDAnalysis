@@ -94,9 +94,9 @@ class CubicEquation:
         h = point.indices.h
         k = point.indices.k
         l = point.indices.l
-        result = math.sqrt((pow(h,2)+pow(k,2)+pow(l,2))/point.invDSqr)
-        self.a = result
-        return result
+        inD = point.invDSqr
+        self.a = math.sqrt((pow(h,2)+pow(k,2)+pow(l,2))/inD)
+        return self.a
 
 class TetragonalEquation:
     a = 0
@@ -111,8 +111,44 @@ class TetragonalEquation:
         l2 = point2.indices.l
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
-        self.c = math.sqrt(((pow(h2,2)+pow(k2,2))*(pow(l1,2)/(pow(h1,2)+pow(k1,2))))/(inD2+inD1*(pow(h2,2)+pow(k2,2))/(pow(h1,2)+pow(k1,2))))
-        self.a = math.sqrt((pow(h1,2)+pow(k1,2))/((pow(l1,2)/pow(self.c,2))-inD1))
+        print h1, ' ', k1, ' ', l1, ' ', inD1, ' ', inD2
+        if l1 == 0:
+            self.a = math.sqrt((h1*h1+k1*k1)/inD1)
+            try:
+                self.c = l2/math.sqrt(inD2-((h2*h2+k2*k2)/(self.a*self.a)))
+            except ValueError:
+                self.c = 0
+                
+                
+        elif l2 == 0:
+            self.a = math.sqrt((h2*h2+k2*k2)/inD2)
+            print self.a
+            try:
+                self.c = math.sqrt(l1*l1/(inD1-(h1*h1+k1*k1)/(self.a*self.a)))
+            except ValueError:
+                self.c = 0
+        elif h1 == 0 and k1 == 0:
+            self.a = 0
+            self.c = 0
+                
+        else:
+            alpha = (h2*h2+k2*k2)/(h1*h1+k1*k1)
+            cNum = l2*l2-(l1*l1*alpha)
+            cDen = inD2-(inD1*alpha)
+            try:
+                self.c = math.sqrt(cNum/cDen)
+            except ValueError:
+                self.c = 0
+                self.a = 0
+            else:
+                try:
+                    aNum = (h1*h1+k1*k1)
+                    aDen = inD1-(l1*l1/(self.c*self.c))
+                    self.a = math.sqrt(aNum/aDen)
+                except (ZeroDivisionError, ValueError):
+                    self.a = 0
+            
+            
         return [self.a, self.c]
 
 class OrthorhombicEquation:
@@ -133,8 +169,8 @@ class OrthorhombicEquation:
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
         inD3 = point3.invDSqr
-        h21Sqr = pow(h2/h1,2)
-        h31Sqr = pow(h3/h1,2)
+        h21Sqr = h2*h2/(h1*h1)
+        h31Sqr = h3*h3/(h1*h1)
         cNum = pow(l3,2)-pow(l1,2)*h31Sqr-(pow(l2,2)-pow(l1,2)*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
         cDen = inD3-inD1*h31Sqr-(inD2-inD1*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
         self.c = math.sqrt(cNum/cDen)
@@ -157,7 +193,9 @@ class HexagonalEquation:
         l2 = point2.indices.l
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
-        l21Sqr = pow(l2/l1,2)
-        self.a = 2*math.sqrt((pow(h2,2)+h2*k2+pow(k2,2)-l21Sqr*(pow(h1,2)+h1*k1+pow(k1,2)))/(3*(inD2-inD1*l21Sqr)))
-        self.c = l1/math.sqrt(inD1-4*(pow(h1,2)+h1*k1+pow(k1,2))/(3*pow(self.a,2)))
+        l21Sqr = l2*l2/(l1*l1)
+        aNum = 4*(h2*h2+h2*k2+k2*k2-l21Sqr*(h1*h1+h1*k1+k1*k1))
+        aDen = 3*(inD2-(inD1*l21Sqr))
+        self.a = math.sqrt(aNum/aDen)
+        self.c = l1/math.sqrt(inD1-(4*(h1*h1+h1*k1*k1*k1)/(3*self.a*self.a)))
         return [self.a, self.c]

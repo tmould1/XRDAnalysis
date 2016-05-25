@@ -183,7 +183,9 @@ class OrthorhombicEquation:
 class HexagonalEquation:
     a = 0
     c = 0
-
+    h = 0
+    k = 0
+    l = 0
     def solve(self, point1, point2):
         h1 = point1.indices.h
         h2 = point2.indices.h
@@ -193,9 +195,32 @@ class HexagonalEquation:
         l2 = point2.indices.l
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
-        l21Sqr = l2*l2/(l1*l1)
-        aNum = 4*(h2*h2+h2*k2+k2*k2-l21Sqr*(h1*h1+h1*k1+k1*k1))
-        aDen = 3*(inD2-(inD1*l21Sqr))
-        self.a = math.sqrt(aNum/aDen)
-        self.c = l1/math.sqrt(inD1-(4*(h1*h1+h1*k1*k1*k1)/(3*self.a*self.a)))
+       
+        if h1>h2 or k1>k2:
+            h = h1
+            h1 = h2
+            k = k1
+            k1 = k2
+            l = l1
+            l1 = l2
+        else:
+            h = h2
+            k = k2
+            l = l2
+        if l1 == 0:
+            self.c = 0
+            self.a = 0
+        else:
+            try:
+                l21Sqr = l*l/(l1*l1)
+                aNum = 4*(h*h+h*k+k*k-l21Sqr*(h1*h1+h1*k1+k1*k1))
+                aDen = 3*(inD2-(inD1*l21Sqr))
+                self.a = math.sqrt(aNum/aDen)
+                try:
+                    self.c = l1/math.sqrt(inD1-(4*(h1*h1+h1*k1*k1*k1)/(3*self.a*self.a)))
+                except ValueError:
+                    self.c = 0
+            except:
+                self.c = 0
+                self.a = 0
         return [self.a, self.c]

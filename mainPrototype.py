@@ -187,6 +187,7 @@ def processData():
     elif equationType == 3:
         solver = xrdClasses.HexagonalEquation()
     i = 2
+    j = 0
     hkl = []
     h = 0
     k = 0
@@ -217,21 +218,24 @@ def processData():
                 a.append(a)
                 c.apppend(c)
         elif equationType == 2:
-            if h == 0 and k == 0:
-               c = l/inD
-            elif h == 0 and l == 0:
-                b = k/inD
-            elif k == 0 and l == 0:
-                a = h/inD
-            
-        
-##            if i%2==0:
-##                point1 = point
-##            elif i == 1:
-##                point2 = point
-##                i+=1
-##            elif i>1:
-##                print solver.solve(point1,point2,point)
+##            if h == 0 and k == 0:
+##               c = l/inD
+##            elif h == 0 and l == 0:
+##                b = k/inD
+##            elif k == 0 and l == 0:
+##                a = h/inD
+##            
+##            elif i
+            if j == 0:
+                point1 = point
+                j+=1
+            elif j == 1:
+                point2 = point
+                j+=1
+            elif j == 2:
+                [a,b,c] = solver.solve(point1,point2,point)
+                j = 0
+                
         elif equationType == 3:
             if i%2==0:
                 point1 = point

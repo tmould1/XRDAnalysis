@@ -188,18 +188,43 @@ def processData():
         solver = xrdClasses.HexagonalEquation()
     i = 2
     hkl = []
+    h = 0
+    k = 0
+    l = 0
+    global a,b,c
+    a = []
+    b = []
+    c = []
+    aPoint = 0
+    bPoint = 0
+    cPoint = 0
     for point in theoreticalSet:
         hkl = point.getIdentifier().Report()
+        inD = point.data.invDSqr
+        h = hkl[0]
+        k = hkl[1]
+        l = hkl[2]
         print hkl
         if equationType == 0:
-            a = solver.solve(point)
+            aPoint = solver.solve(point)
+            a.append(a)
             print a
         elif equationType == 1:
             if i%2==0:
                 point1 = point
             else:
-                print solver.solve(point1,point)
-##        elif equationType == 2:
+                [aPoint,cPoint] = solver.solve(point1,point)
+                a.append(a)
+                c.apppend(c)
+        elif equationType == 2:
+            if h == 0 and k == 0:
+               c = l/inD
+            elif h == 0 and l == 0:
+                b = k/inD
+            elif k == 0 and l == 0:
+                a = h/inD
+            
+        
 ##            if i%2==0:
 ##                point1 = point
 ##            elif i == 1:

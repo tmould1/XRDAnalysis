@@ -60,9 +60,10 @@ class ExperimentalDataPoint:
     indices = MillerIndices(0,0,0)
     intensity = 0
     twoTheta = 0
-    dVal = 0
+    inD = 0
     ratios = []
     id = -1
+    wavLen = 1.540562
 
 
     def __init__(self, inInt, inTwoTheta, inId):
@@ -78,13 +79,18 @@ class ExperimentalDataPoint:
         return data
 
     def calcDValue(self):
-        return 1
+        self.twoTheta = self.twoTheta*math.pi/180
+        self.inD = pow(2*math.sin(self.twoTheta)/self.wavLen, 2)
+        return [self.inD, self.intensity]
 
     def calcRatios(self, dataSet):
         return 1
 
     def getIdentifier(self):
         return self.indices.get()
+
+    def Report(self):
+        return self.calcDValue()
 
 
 class CubicEquation:
@@ -111,18 +117,15 @@ class TetragonalEquation:
         l2 = point2.indices.l
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
-        print h1, ' ', k1, ' ', l1, ' ', inD1, ' ', inD2
         if l1 == 0:
             self.a = math.sqrt((h1*h1+k1*k1)/inD1)
             try:
                 self.c = l2/math.sqrt(inD2-((h2*h2+k2*k2)/(self.a*self.a)))
             except ValueError:
                 self.c = 0
-                
-                
+         
         elif l2 == 0:
             self.a = math.sqrt((h2*h2+k2*k2)/inD2)
-            print self.a
             try:
                 self.c = math.sqrt(l1*l1/(inD1-(h1*h1+k1*k1)/(self.a*self.a)))
             except ValueError:
@@ -141,13 +144,18 @@ class TetragonalEquation:
                 self.c = 0
                 self.a = 0
             else:
+                aNum = (h1*h1+k1*k1)
                 try:
-                    aNum = (h1*h1+k1*k1)
                     aDen = inD1-(l1*l1/(self.c*self.c))
-                    self.a = math.sqrt(aNum/aDen)
-                except (ZeroDivisionError, ValueError):
+                except ZeroDivisionError:
                     self.a = 0
-            
+                    self.c = 0
+                else:
+                    try:
+                        self.a = math.sqrt(aNum/aDen)   
+                    except (ZeroDivisionError, ValueError):
+                        self.a = 0
+                        self.c = 0            
             
         return [self.a, self.c]
 
@@ -169,15 +177,77 @@ class OrthorhombicEquation:
         inD1 = point1.invDSqr
         inD2 = point2.invDSqr
         inD3 = point3.invDSqr
-        h21Sqr = h2*h2/(h1*h1)
-        h31Sqr = h3*h3/(h1*h1)
-        cNum = pow(l3,2)-pow(l1,2)*h31Sqr-(pow(l2,2)-pow(l1,2)*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
-        cDen = inD3-inD1*h31Sqr-(inD2-inD1*h21Sqr)*(pow(k3,2)-pow(k1,2)*h31Sqr)/(pow(k2,2)-pow(k1,2)*h21Sqr)
-        self.c = math.sqrt(cNum/cDen)
-        bNum = pow(k2,2)-pow(k1,2)*h21Sqr
-        bDen = inD2-inD1*h21Sqr-(pow(l2,2)-pow(l1,2)*h21Sqr)/pow(self.c,2)
-        self.b = math.sqrt(bNum/bDen)
-        self.a = h1/math.sqrt(inD1-pow(k1,2)/pow(self.b,2)-pow(l1,2)/pow(self.c,2))
+        
+##        if h1 == 0 and k1 == 0:
+##            self.c = math.sqrt(l1*l1/inD1)
+##            h32Sqr = pow(h3/h2,2)
+##            l21Sqr = pow(l2/l1,2)
+##            bNum = k3*k3-k2*k2*h32Sqr
+##            bDen = inD3-h32Sqr*(inD2-l21Sqr*inD1)
+##            self.b = math.sqrt(bNum/bDen)
+##            self.a = math.sqrt(h2*h2/(inD2-l21Sqr*inD1-pow(k2/self.b,2)))
+##        elif h2 == 0 and k2 == 0:
+##            self.c = math.sqrt(l2*l2/inD2)
+##            h13Sqr = pow(h1/h3,2)
+##            l32Sqr = pow(l3/l2,2)
+##            bNum = k1*k1-k3*k3*h13Sqr
+##            bDen = inD1-h13Sqr*(inD3-l32Sqr*inD2)
+##            self.b = math.sqrt(bNum/bDen)
+##            self.a = math.sqrt(h3*h3/(inD3-l32Sqr*inD2-pow(k3/self.b,2)))
+##        elif h3 == 0 and k3 == 0:
+##            self.c = math.sqrt(l3*l3/inD3)
+##            h21Sqr = pow(h2/h1,2)
+##            l13Sqr = pow(l1/l3,2)
+##            bNum = k2*k2-k1*k1*h21Sqr
+##            bDen = inD2-h21Sqr*(inD1-l13Sqr*inD3)
+##            self.b = math.sqrt(bNum/bDen)
+##            self.a = math.sqrt(h1*h1/(inD1-l13Sqr*inD3-pow(k1/self.b,2)))
+        if h1 == 0:
+            self.a = 0
+            self.b = 0
+            self.c = 0
+        else:
+            h21Sqr = pow(h2/h1,2)
+            h31Sqr = pow(h3,h1,2)
+            cNum = l3*l3-l1*l1*h31Sqr-(l2*l2-l1*l1*h21Sqr)*(k3*k3-k1*k1*h31Sqr)
+##            try:
+            cDen = inD3-inD1*h31Sqr-(inD2-inD1*h21Sqr)*(k3*k3-k1*k1*h31Sqr)/(k2*k2-k1*k1*h21Sqr)
+##            except (ZeroDivisionError, ValueError):
+##                self.c = 0
+##                self.b = 0
+##                self.a = 0
+##            else:
+##                try:
+            self.c = math.sqrt(abs(cNum/cDen))
+##                except ValueError:
+##                    self.c = 0
+##                    self.a = 0
+##                    self.b = 0
+##                else:
+            bNum = k2*k2-k1*k1*h21Sqr
+##                    try:
+            bDen = inD2-inD1*h21Sqr-(l2*l2-l1*l1*h21Sqr)/(self.c*self.c)
+##                    except ZeroDivisionError:
+##                        self.a = 0
+##                        self.b = 0
+##                        self.c = 0
+##                    else:
+##                        try:
+            self.b = math.sqrt(abs(bNum/bDen))
+##                        except ValueError:
+##                            self.a = 0
+##                            self.b = 0
+##                            self.c = 0
+##                        else:
+##                            try:
+            self.a = math.sqrt(abs(h1*h1/(inD1-pow(k1/self.b,2)-pow(l1/self.c,2))))
+                                
+##                            except ValueError:
+##                                self.a = 0
+##                                self.b = 0
+##                                self.c = 0
+        print self.a, self.b, self.c
+                            
         return [self.a, self.b, self.c]
 
 class HexagonalEquation:

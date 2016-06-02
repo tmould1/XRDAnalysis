@@ -10,7 +10,11 @@
 
 import xrdClasses
 import math
-import csv
+import numpy as np
+import scipy as sp
+from scipy import signal
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 #############
 #  List Helper Functions
@@ -65,8 +69,7 @@ def getTheoreticalData():
     
     # get theoretical filename
     askStructureType = str(raw_input("Enter the number corresponding to your sample structure: 0-cubic, 1-tetragonal, 2-orthorhombic, 3-hexagonal :  "))
-    equationType = float(askStructureType)
-    print equationType
+    equationType = int(askStructureType)
     thFileName = str(raw_input("Enter Theoretical File Name:  "))
     while status == 0:
     
@@ -118,9 +121,7 @@ def getTheoreticalData():
         
     # END FOR
     
-    f.close()
-
-    
+    f.close()  
 
     if status:
         print 'Got theoretical data'
@@ -147,26 +148,79 @@ def getExperimentalData():
     i = 0
     
     # open file for reading
-    with open( xpFileName ) as csvfile:
-        f = csv.reader(csvfile, delimiter=' ')
+    f = open( xpFileName )
 
-        for line in f:
+    # Initialize Imax variable
+    Imax = 0
+    intensityArray = []
+    for line in f:
+        i+=1
+        if i<=367:
+            continue
+        else:
             # Strip the line into words
-            
+            line = line.strip()
+            line = line.split()
             twoTheta = float(line[0])
             intensity = float(line[1])
-        
+            if intensity>Imax:
+                Imax = intensity
+           
             # Make Data Point object
             iDataPoint = xrdClasses.ExperimentalDataPoint( intensity, twoTheta, i )
             
             # Add Data point to list
             AddDataPoint( iDataPoint, experimentalSet )
+            AddDataPoint( intensity, instensityArray )
             i+=1
-        
-            # END FOR
     
-    csvfile.close()   
+        # END FOR
+    
+    f.close()
 
+    peaks = signal.find_peaks_cwt( intensityArray, 0.07, gap_thresh=30 )
+    print peaks
+    
+
+##    points = []
+##    i = 0
+##    for point in experimentalSet:
+##        if len(points)<=20:
+##            AddDataPoint( point, points )
+##            continue
+##        points = sorted(points, key=lambda point:point.intensity, reverse=True)
+##        if point.Report()[1]>points[i].Report()[1]:
+##            if abs(point.Report()[0]-points[i].Report()[0])<0.01:
+##                GetDataPoint( i, points )
+##                PlaceDataPoint( point, i, points )
+##            else:
+##                AddDataPoint( point, points )
+##                i+=1
+##        else:
+##            continue
+##    print len(points)
+##    
+##    print len(points)
+##    for j in range(1, len(points)):
+##        if j > 20:
+##            GetDataPoint( j-1, points )
+##    print len(points)
+##
+##    global xpDRatios
+##    xpDRatios = []
+##    inDValues = []
+##    for point in points:
+##        AddDataPoint( point.Report()[0], inDValues )
+##    for i in range(0,len(inDValues)):
+##        inDi = inDValues[i]
+##        for j in range(i+1, len(inDValues)):
+##            inDj = inDValues[j]
+##            inDRatio = inDi/inDj
+##            AddDataPoint( inDRatio, xpDRatios )
+            
+        
+        
+    
     if status:
         print 'Got experimental data'
     else:
@@ -175,10 +229,14 @@ def getExperimentalData():
 
 # Process Data
 def processData():
-    print equationType
-    # determine equation type
+##    print equationType
+
+    # Find Max Intensity Points
+    topIntensityPoints = findMaxIntensities()
+
+    points = []
+    # determine Equation Solver Class
     if equationType == 0:
-        # Create an Object from Class Instantiation
         solver = xrdClasses.CubicEquation()
     elif equationType == 1:
         solver = xrdClasses.TetragonalEquation()
@@ -186,82 +244,51 @@ def processData():
         solver = xrdClasses.OrthorhombicEquation()
     elif equationType == 3:
         solver = xrdClasses.HexagonalEquation()
-    i = 2
-    j = 0
-    hkl = []
-    h = 0
-    k = 0
-    l = 0
-    global a,b,c
-    a = []
-    b = []
-    c = []
-    aPoint = 0
-    bPoint = 0
-    cPoint = 0
-    for point in theoreticalSet:
-        hkl = point.getIdentifier().Report()
-        inD = point.data.invDSqr
-        h = hkl[0]
-        k = hkl[1]
-        l = hkl[2]
-        print hkl
+
+    for point in topIntensityPoints:
+
+        AddDataPoint(point, points)
         if equationType == 0:
-            aPoint = solver.solve(point)
-            a.append(a)
-            print a
+            if len(points) > 1:
+                GetDataPoint( 0, points )
+            AddDataPoint( solver.solve(points[0]), latticeConstants )
+
         elif equationType == 1:
-            if i%2==0:
-                point1 = point
-            else:
-                [aPoint,cPoint] = solver.solve(point1,point)
-                a.append(a)
-                c.apppend(c)
+            if len(points) < 2:
+                continue
+            elif len(points) == 2:
+##                GetDataPoint( 0, points )
+                AddDataPoint( solver.solve(points[0], points[1]), latticeConstants )
         elif equationType == 2:
-##            if h == 0 and k == 0:
-##               c = l/inD
-##            elif h == 0 and l == 0:
-##                b = k/inD
-##            elif k == 0 and l == 0:
-##                a = h/inD
-##            
-##            elif i
-            if j == 0:
-                point1 = point
-                j+=1
-            elif j == 1:
-                point2 = point
-                j+=1
-            elif j == 2:
-                [a,b,c] = solver.solve(point1,point2,point)
-                j = 0
-                
+            if len(points) < 3:
+                continue
+            elif len(points) == 3:
+                AddDataPoint( solver.solve(points[0], points[1], points[2]), latticeConstants)
+        
         elif equationType == 3:
-            if i%2==0:
-                point1 = point
-            else:
-                print solver.solve(point1,point)
-        i+=1
+            if len(points) < 2:
+                continue
+            elif len(points) == 2:
+##                GetDataPoint( 0, points )
+                AddDataPoint( solver.solve(points[0], points[1]), latticeConstants )
+
             
-    
-        
-        
-        
-        
-    
-        
-        
-##        thetaRad = math.radians(point.twoTheta)
-##        if equationType == 0:
-##            print solver.solve(point)
-##            break
-##       
-##        AddDataPoint( thetaRad, processedTheoreticalSet )
-                      
-    
+       
 
 # calculate d-ratios
 def calcRatios():
+    inDValues = []
+    thDRatios = []
+    topIntensityPoints = findMaxIntensities()
+    for point in topIntensityPoints:
+        AddDataPoint( point.Report()[3], inDValues )
+    for i in range( 0,len(inDValues)):
+        inDi = inDValues[i]
+        for j in range( i+1,len(inDValues)):
+            inDj = inDValues[j]
+            inDRatio = inDi/inDj
+            AddDataPoint( inDRatio, thDRatios )
+        
     print 'calculated d-ratios'
 
 # Check Info for epsilon neighborhood
@@ -272,11 +299,39 @@ def checkInfo():
 def calcLattice():
     print 'Calculated the lattice constants'
 
+# Grab top intensities
+def findMaxIntensities():
+    points = []
+    for point in theoreticalSet:
+##        print point.Report()
+        hkl = point.getIdentifier().Report()
+        result = hkl[0]+hkl[1]+hkl[2]
+        if result%2==1:
+            continue
+        elements = point.Report()
+        if len(points)<=10:
+            AddDataPoint( point, points )
+        if len(points)>10:
+            points = sortOnIntensity( points )
+            GetDataPoint( 10, points )
+
+##    print 'Finished Grabbing Top Intensities, they follow: '
+##    for item in points:
+##        print item.Report()[2]
+    return points
+
+# Sort by Intensity
+def sortOnIntensity( intArray ):
+    return sorted(intArray, key=lambda point: point.percentI, reverse=True)
+    
+
 # Report necessary information in appropriate location
 def report():
 ##    for datapoint in theoreticalSet:
 ##        print "MillerIndices: ", datapoint.indices.Report()
 ##        print "Data: ", datapoint.Report()
+##    for point in latticeConstants:
+##        print point
     print 'All data reported to specified location'
 
 ###############
@@ -310,7 +365,7 @@ def main():
     
     
     getTheoreticalData()
-    #getExperimentalData()
+    getExperimentalData()
 
     processData()
     print "processed data"
@@ -327,9 +382,12 @@ def main():
 
 # Procedure
 theoreticalSet = []
+theoreticalSetRefined = []
 experimentalSet = []
+experimentalSetRefined = []
 processedTheoreticalSet = []
 processedExperimentalSet = []
+latticeConstants = []
 ##equationType = -1
 a = []
 b = []
